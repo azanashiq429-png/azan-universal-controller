@@ -1,0 +1,178 @@
+/* --- Google Fonts & Reset --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #0b0f19;
+    color: #f3f4f6;
+    min-height: 100vh;
+}
+
+/* --- Header Navbar --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #111827;
+    padding: 15px 30px;
+    border-bottom: 2px solid #1f2937;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #3b82f6; /* Premium Blue Accent */
+}
+
+.server-status {
+    background: #1e293b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981; /* Green indicator */
+    border-radius: 50%;
+    box-shadow: 0 0 8px #10b981;
+}
+
+/* --- Dashboard Grid Container --- */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* PC par side-by-side design */
+    gap: 30px;
+}
+
+/* Mobile responsive karne ke liye */
+@media (max-width: 768px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Premium Cards Design --- */
+.card {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.card p {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 20px;
+}
+
+/* --- Input Fields & Buttons --- */
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group input {
+    width: 100%;
+    background: #1f2937;
+    border: 1px solid #374151;
+    padding: 12px 15px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary {
+    width: 100%;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* --- Live Sites Cards Grid --- */
+.sites-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.no-sites {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    padding: 40px 0;
+    border: 2px dashed #1f2937;
+    border-radius: 8px;
+}
+
+/* Active Connected Website Card Style */
+.site-item {
+    background: #1f2937;
+    border-left: 4px solid #10b981; /* Green line representing connected status */
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-info h4 {
+    font-size: 15px;
+    color: #fff;
+}
+
+.site-info p {
+    font-size: 11px;
+    color: #9ca3af;
+    margin: 2px 0 0 0;
+}
+
+.badge-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
