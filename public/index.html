@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZAN TOOLS | Universal Controller</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">AZAN <span>TOOLS</span></div>
+        <div class="server-status"><span class="dot"></span> System Live</div>
+    </header>
+
+    <main class="dashboard-container">
+        
+        <section class="card connector-box">
+            <h2>🔗 Connect New Website</h2>
+            <p>Apni web ka URL aur secret connector token enter karein:</p>
+            <form id="connectForm">
+                <div class="input-group">
+                    <input type="url" id="webUrl" placeholder="https://example.com" required>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="webToken" placeholder="Enter Connector Token..." required>
+                </div>
+                <button type="submit" class="btn-primary">Establish Connection</button>
+            </form>
+        </section>
+
+        <section class="card monitor-box">
+            <h2>🖥️ Connected Nodes & Websites</h2>
+            <div class="sites-grid" id="sitesGrid">
+                <div class="no-sites">No websites connected yet. Waiting for handshake...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+                      </html>
+                      
