@@ -4,15 +4,16 @@ const sitesGrid = document.getElementById('sitesGrid');
 // 📊 Function: Connected websites aur unki activities ko server se la kar screen par dikhana
 async function fetchConnectedWebsites() {
     try {
-        const response = await fetch('/api/websites');
-        const result = await response.json();
+        const response = await fetch('/api/status');
+        const sites = await response.json();
 
-        if (result.success && result.data.length > 0) {
+        if (Object.keys(sites).length > 0) {
             // Grid ko clear karein
             sitesGrid.innerHTML = '';
 
             // Har connected website ke liye card banayein
-            result.data.forEach(site => {
+            for (let url in sites) {
+                const site = sites[url];
                 const siteCard = document.createElement('div');
                 siteCard.className = 'site-item';
                 siteCard.style.display = 'flex';
@@ -22,22 +23,16 @@ async function fetchConnectedWebsites() {
                 siteCard.style.border = '1px solid rgba(255, 255, 255, 0.1)';
                 siteCard.style.borderRadius = '10px';
                 siteCard.style.background = '#0e1626';
-                
-                // Date format set karne ke liye
-                const date = new Date(site.connectedAt).toLocaleTimeString();
+                siteCard.style.marginBottom = '15px';
 
                 // 📡 Live Activities Feeds generate karna
                 let activitiesListHtml = '';
-                if (site.activities && site.activities.length > 0) {
-                    // Sabse latest 4 activities ko ulta (reverse) karke dikhana
-                    const latestActivities = [...site.activities].reverse().slice(0, 4);
-                    
-                    latestActivities.forEach(act => {
-                        const actTime = new Date(act.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                if (site.events && site.events.length > 0) {
+                    site.events.forEach(ev => {
                         activitiesListHtml += `
                             <div style="font-size: 0.8rem; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; border-left: 3px solid #00f2fe; margin-bottom: 4px; display: flex; justify-content: space-between;">
-                                <span>⚡ <b>${act.action}</b> [${act.toolName}]</span>
-                                <span style="color: #64748b;">${actTime}</span>
+                                <span>⚡ <b>${ev.action}</b> [${ev.tool}]</span>
+                                <span style="color: #64748b;">${ev.time}</span>
                             </div>
                         `;
                     });
@@ -48,8 +43,8 @@ async function fetchConnectedWebsites() {
                 siteCard.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                         <div class="site-info">
-                            <h4 style="margin: 0; color: #ffffff; font-size: 1.1rem;">${site.url}</h4>
-                            <p style="margin: 2px 0 0 0; font-size: 0.75rem; color: #8fa0dd;">Linked: ${date}</p>
+                            <h4 style="margin: 0; color: #ffffff; font-size: 1.1rem;">${site.url || url}</h4>
+                            <p style="margin: 2px 0 0 0; font-size: 0.75rem; color: #8fa0dd;">Linked: ${site.connectedAt ? new Date(site.connectedAt).toLocaleTimeString() : 'Just Now'}</p>
                         </div>
                         <span class="badge-active" style="background: #22c55e; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${site.status}</span>
                     </div>
@@ -60,9 +55,8 @@ async function fetchConnectedWebsites() {
                     </div>
                 `;
                 sitesGrid.appendChild(siteCard);
-            });
+            }
         } else {
-            // Agar koi site nahi hai toh default text show karein
             sitesGrid.innerHTML = `<div class="no-sites">No websites connected yet. Waiting for handshake...</div>`;
         }
     } catch (error) {
@@ -72,26 +66,23 @@ async function fetchConnectedWebsites() {
 
 // 🔗 Form Submission: Jab aap "Establish Connection" par click karenge
 connectForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Page refresh hone se rokna
+    e.preventDefault();
 
-    const websiteUrl = document.getElementById('webUrl').value;
-    const connectorToken = document.getElementById('webToken').value;
+    const url = document.getElementById('webUrl').value.trim();
+    const token = document.getElementById('webToken').value.trim();
 
     try {
         const response = await fetch('/api/connect', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ websiteUrl, connectorToken })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, token })
         });
 
         const result = await response.json();
 
         if (result.success) {
             alert("Mubarak ho! Connection successfully establish ho gaya.");
-            connectForm.reset(); // Form inputs clear karein
-            fetchConnectedWebsites(); // List ko fawran update karein
+            fetchConnectedWebsites();
         } else {
             alert("Error: " + result.message);
         }
@@ -102,9 +93,66 @@ connectForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Page load hote hi connected websites check karein
+// ==========================================
+// 🔥 NEW FEATURES: REMOTE CONTROL COMMANDS
+// ==========================================
+
+let maintenanceState = false;
+const btnMaintenance = document.getElementById('btnMaintenance');
+
+// Maintenance Button ON/OFF State Toggle
+if(btnMaintenance) {
+    btnMaintenance.addEventListener('click', () => {
+        maintenanceState = !maintenanceState;
+        if(maintenanceState) {
+            btnMaintenance.innerText = "ON";
+            btnMaintenance.style.background = "#ef4444"; // Red Color
+        } else {
+            btnMaintenance.innerText = "OFF";
+            btnMaintenance.style.background = "#475569"; // Slate Color
+        }
+    });
+}
+
+// "Apply Supreme Commands" Button par click hone ki poori logic (Ab isme saare features hain)
+const btnUpdateSettings = document.getElementById('btnUpdateSettings');
+if(btnUpdateSettings) {
+    btnUpdateSettings.addEventListener('click', async () => {
+        const token = document.getElementById('webToken').value.trim() || 'AzanTools_Secure_786';
+        const alertMessage = document.getElementById('alertMsg').value.trim();
+        
+        // 🎨 Naye Elements ka data pick karna
+        const themeColor = document.getElementById('themeSelect') ? document.getElementById('themeSelect').value : 'default';
+        const blockedTools = document.getElementById('blockedToolsInput') ? document.getElementById('blockedToolsInput').value : '';
+
+        try {
+            const response = await fetch('/api/update-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: token,
+                    maintenanceMode: maintenanceState,
+                    alertMessage: alertMessage,
+                    themeColor: themeColor,     // Server ko send ho raha hai
+                    blockedTools: blockedTools   // Server ko send ho raha hai
+                })
+            });
+            const data = await response.json();
+            if(data.success) {
+                alert('Supreme Commands deployed successfully!');
+                document.getElementById('alertMsg').value = ''; // Alert field reset
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (err) {
+            alert('Settings update karne me masla aaya.');
+        }
+    });
+}
+
+// Initial functions trigger
 fetchConnectedWebsites();
 
-// Har 5 second baad background mein automatic update karein (Live Monitoring)
+// Background Automatic Reloading Monitoring
 setInterval(fetchConnectedWebsites, 5000);
-                    
+            
