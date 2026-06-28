@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AZAN TOOLS | Universal Controller</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -16,7 +17,7 @@
     <main class="dashboard-container">
         
         <section class="card connector-box">
-            <h2>🔗 Connect New Website</h2>
+            <h2><i class="fa-solid fa-link" style="color: #00f2fe;"></i> Connect New Website</h2>
             <p>Apni web ka URL aur secret connector token enter karein:</p>
             <form id="connectForm">
                 <div class="input-group">
@@ -29,8 +30,40 @@
             </form>
         </section>
 
+        <section class="card control-box">
+            <h2><i class="fa-solid fa-sliders" style="color: #10b981;"></i> Remote Control Commands</h2>
+            <p style="margin-bottom: 15px;">Yahan se apni website ko poori tarah control karein:</p>
+            
+            <div class="input-group" style="display: flex; align-items: center; justify-content: space-between; background: #1f2937; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.02);">
+                <label style="color: #9ca3af; font-size: 13px; font-weight: 600; margin: 0;">⚠️ MAINTENANCE MODE:</label>
+                <button id="btnMaintenance" type="button" style="width: auto; background: #475569; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;">OFF</button>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label style="display: block; color: #9ca3af; font-size: 13px; margin-bottom: 6px; font-weight: 600;">🎨 REMOTE THEME ENGINE:</label>
+                <select id="themeSelect" style="width: 100%; background: #1f2937; border: 1px solid #374151; padding: 12px; border-radius: 8px; color: white; font-size: 14px; outline: none; transition: 0.3s;">
+                    <option value="default">Cyber Default Blue</option>
+                    <option value="green">Toxic Neon Green</option>
+                    <option value="red">Inferno Hacker Red</option>
+                </select>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label style="display: block; color: #9ca3af; font-size: 13px; margin-bottom: 6px; font-weight: 600;">🚫 TARGET TOOL BLOCKER:</label>
+                <input type="text" id="blockedToolsInput" placeholder="Tool ka naam likhein (e.g. Nmap, IP Tracker)..." style="width: 100%; background: #1f2937; border: 1px solid #374151; padding: 12px; border-radius: 8px; color: white;">
+                <small style="color: #64748b; font-size: 11px; display: block; margin-top: 5px;">Multiple tools block karne ke liye comma (,) lagayein.</small>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label style="display: block; color: #9ca3af; font-size: 13px; margin-bottom: 6px; font-weight: 600;">🚨 REMOTE POP-UP ALERT MESSAGE:</label>
+                <input type="text" id="alertMsg" placeholder="Users ke liye koi live message likhein..." style="width: 100%; background: #1f2937; border: 1px solid #374151; padding: 12px; border-radius: 8px; color: white;">
+            </div>
+
+            <button id="btnUpdateSettings" type="button" class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">Apply Supreme Commands</button>
+        </section>
+
         <section class="card monitor-box">
-            <h2>🖥️ Connected Nodes & Websites</h2>
+            <h2><i class="fa-solid fa-terminal" style="color: #a371f7;"></i> Connected Nodes & Websites</h2>
             <div class="sites-grid" id="sitesGrid">
                 <div class="no-sites">No websites connected yet. Waiting for handshake...</div>
             </div>
@@ -41,4 +74,4 @@
     <script src="app.js"></script>
 </body>
     </html>
-    
+                    
