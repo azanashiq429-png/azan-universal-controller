@@ -4,15 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 
-// Middleware setup
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-// 📁 Vercel Secure temporary path for state persistence
+// 📁 Vercel Secure temporary path for state persistence (Bypasses Serverless Reset)
 const SETTINGS_FILE = path.join('/tmp', 'systemSettings.json');
 
-// Default configurations
+// Default initial configurations matrix
 const defaultSettings = {
     maintenanceMode: false,
     alertMessage: "",
@@ -33,7 +28,7 @@ const defaultSettings = {
     }
 };
 
-// 🧠 Helper Function: Read configuration safely from /tmp
+// 🧠 Helper Function: Read configuration safely from Serverless cache
 function getStoredSettings() {
     try {
         if (fs.existsSync(SETTINGS_FILE)) {
@@ -46,7 +41,7 @@ function getStoredSettings() {
     return defaultSettings;
 }
 
-// 💾 Helper Function: Write configuration safely to /tmp
+// 💾 Helper Function: Write configuration safely to Serverless cache
 function saveStoredSettings(settings) {
     try {
         fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
@@ -54,6 +49,23 @@ function saveStoredSettings(settings) {
         console.error("Error writing settings state container:", e);
     }
 }
+
+// Middleware setup
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+// ✨ FORCE ALLOW CORS HEADERS FOR VERCEL CROSS-DOMAIN TRAFFIC (Bypass Target Restrictions)
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 // Mock Database (Purana tracker state preserved)
 let connectedWebsites = {};
@@ -68,7 +80,7 @@ app.use((req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
     
     if (req.url.includes('/api/get-settings')) {
-        const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
         const currentSettings = getStoredSettings();
         
         // 🚫 Smart Firewall Verification
@@ -86,7 +98,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Clean idle live users every 8 seconds
+// Clean idle live users every 8 seconds (Runs safely during active requests)
 setInterval(() => {
     const now = Date.now();
     for (let ip in liveSessions) {
@@ -95,6 +107,11 @@ setInterval(() => {
         }
     }
 }, 8000);
+
+// 🏠 NEW HOME ROUTE: Render Dashboard and Fix 'Cannot GET /' Error
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // 🔗 1. Connector Endpoint (Handshake preserved)
 app.post('/api/connect', (req, res) => {
@@ -161,7 +178,7 @@ app.get('/api/status', (req, res) => {
     res.json(connectedWebsites);
 });
 
-// 📈 NEW ENDPOINT: Dashboard UI elements data sync
+// 📈 UI Sync Endpoint: Pulls data safely combining persisted settings
 app.get('/api/admin-stats', (req, res) => {
     res.json({
         settings: getStoredSettings(),
@@ -176,7 +193,7 @@ app.get('/api/get-settings', (req, res) => {
     res.json(getStoredSettings());
 });
 
-// 🎚️ 5. Endpoint: Legacy & Supreme Update Route handler combined
+// 🎚️ 5. Endpoint: Legacy Update Route handler combined with storage persistence
 app.post('/api/update-settings', (req, res) => {
     const { token, maintenanceMode, alertMessage, themeColor, blockedTools } = req.body;
 
@@ -200,7 +217,7 @@ app.post('/api/update-settings', (req, res) => {
     res.json({ success: true, currentSettings: currentSettings });
 });
 
-// 🚀 NEW MASTER ROUTE: Handles complex payload from advanced controller panel
+// 🚀 MASTER ROUTE: Handles advanced merged configuration blocks
 app.post('/api/update-master', (req, res) => {
     const { token, config } = req.body;
 
@@ -210,8 +227,6 @@ app.post('/api/update-master', (req, res) => {
 
     if (config) {
         let currentSettings = getStoredSettings();
-        
-        // Merge payloads safely
         let updatedSettings = { ...currentSettings, ...config };
         
         if (config.blockedTools && typeof config.blockedTools === 'string') {
@@ -222,7 +237,7 @@ app.post('/api/update-master', (req, res) => {
         return res.json({ success: true, currentSettings: updatedSettings });
     }
 
-    res.status(400).json({ success: false, error: 'No configuration matrix array provided' });
+    res.status(400).json({ success: false, error: 'No configuration payload matrix found.' });
 });
 
 // Port Handling
@@ -235,4 +250,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = app;
-        
+         
