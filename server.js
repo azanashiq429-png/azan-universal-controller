@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 // Middleware setup
@@ -7,29 +9,54 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Mock Database (Purana tracker state preserved)
-let connectedWebsites = {};
+// 📁 Vercel Secure temporary path for state persistence
+const SETTINGS_FILE = path.join('/tmp', 'systemSettings.json');
 
-// 🧠 ULTIMATE SUPREME CONTROL STATE (Upgraded with Pro Features)
-let systemSettings = {
+// Default configurations
+const defaultSettings = {
     maintenanceMode: false,
     alertMessage: "",
-    themeColor: "default", // default, green, red
-    blockedTools: [],       // Blocked tools array
-    redirectUrl: "",        // NEW: Maintenance hone par redirect link
-    broadcastNotification: { // NEW: Top banner engine
+    themeColor: "default", 
+    blockedTools: [],       
+    redirectUrl: "",        
+    broadcastNotification: { 
         show: false,
         text: "",
-        type: "info" // info, warning, danger
+        type: "info" 
     },
-    firewall: {             // NEW: Smart Firewall rules
+    firewall: {             
         blockPC: false
     },
-    meta: {                 // NEW: Website Title/Subtitle controller
+    meta: {                 
         siteTitle: "AZAN TOOLS",
         siteSubtitle: "WELCOME TO OUR TOOLKIT V 4.1"
     }
 };
+
+// 🧠 Helper Function: Read configuration safely from /tmp
+function getStoredSettings() {
+    try {
+        if (fs.existsSync(SETTINGS_FILE)) {
+            const data = fs.readFileSync(SETTINGS_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error("Error reading settings state container:", e);
+    }
+    return defaultSettings;
+}
+
+// 💾 Helper Function: Write configuration safely to /tmp
+function saveStoredSettings(settings) {
+    try {
+        fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+    } catch (e) {
+        console.error("Error writing settings state container:", e);
+    }
+}
+
+// Mock Database (Purana tracker state preserved)
+let connectedWebsites = {};
 
 // 🛰️ LIVE TELEMETRY ENGINE VARIABLES
 let liveSessions = {}; 
@@ -41,10 +68,11 @@ app.use((req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
     
     if (req.url.includes('/api/get-settings')) {
-        const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const currentSettings = getStoredSettings();
         
         // 🚫 Smart Firewall Verification
-        if (systemSettings.firewall.blockPC && isPC) {
+        if (currentSettings.firewall && currentSettings.firewall.blockPC && isPC) {
             return res.status(403).json({ firewallBlock: true, reason: "PC Users are restricted by Admin Shield." });
         }
 
@@ -136,7 +164,7 @@ app.get('/api/status', (req, res) => {
 // 📈 NEW ENDPOINT: Dashboard UI elements data sync
 app.get('/api/admin-stats', (req, res) => {
     res.json({
-        settings: systemSettings,
+        settings: getStoredSettings(),
         activeUsersCount: Object.keys(liveSessions).length,
         liveUsers: Object.values(liveSessions),
         logs: activityLogs.slice(0, 15)
@@ -145,7 +173,7 @@ app.get('/api/admin-stats', (req, res) => {
 
 // ⚙️ 4. Endpoint: Target Web Live Rules Fetch Engine
 app.get('/api/get-settings', (req, res) => {
-    res.json(systemSettings);
+    res.json(getStoredSettings());
 });
 
 // 🎚️ 5. Endpoint: Legacy & Supreme Update Route handler combined
@@ -156,17 +184,20 @@ app.post('/api/update-settings', (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized token' });
     }
 
-    if (maintenanceMode !== undefined) systemSettings.maintenanceMode = maintenanceMode;
-    if (alertMessage !== undefined) systemSettings.alertMessage = alertMessage;
-    if (themeColor !== undefined) systemSettings.themeColor = themeColor;
+    let currentSettings = getStoredSettings();
+
+    if (maintenanceMode !== undefined) currentSettings.maintenanceMode = maintenanceMode;
+    if (alertMessage !== undefined) currentSettings.alertMessage = alertMessage;
+    if (themeColor !== undefined) currentSettings.themeColor = themeColor;
     
     if (blockedTools !== undefined) {
-        systemSettings.blockedTools = blockedTools.split(',')
+        currentSettings.blockedTools = blockedTools.split(',')
             .map(t => t.trim().toLowerCase())
             .filter(t => t !== "");
     }
 
-    res.json({ success: true, currentSettings: systemSettings });
+    saveStoredSettings(currentSettings);
+    res.json({ success: true, currentSettings: currentSettings });
 });
 
 // 🚀 NEW MASTER ROUTE: Handles complex payload from advanced controller panel
@@ -178,17 +209,20 @@ app.post('/api/update-master', (req, res) => {
     }
 
     if (config) {
-        systemSettings = { ...systemSettings, ...config };
+        let currentSettings = getStoredSettings();
+        
+        // Merge payloads safely
+        let updatedSettings = { ...currentSettings, ...config };
         
         if (config.blockedTools && typeof config.blockedTools === 'string') {
-            systemSettings.blockedTools = config.blockedTools.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
+            updatedSettings.blockedTools = config.blockedTools.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
         }
-        if (config.broadcastNotification) systemSettings.broadcastNotification = config.broadcastNotification;
-        if (config.firewall) systemSettings.firewall = config.firewall;
-        if (config.meta) systemSettings.meta = config.meta;
+        
+        saveStoredSettings(updatedSettings);
+        return res.json({ success: true, currentSettings: updatedSettings });
     }
 
-    res.json({ success: true, currentSettings: systemSettings });
+    res.status(400).json({ success: false, error: 'No configuration matrix array provided' });
 });
 
 // Port Handling
