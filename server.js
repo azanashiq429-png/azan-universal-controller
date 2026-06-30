@@ -6,7 +6,7 @@ const { getFirestore, doc, getDoc, setDoc } = require('firebase/firestore');
 
 const app = express();
 
-// 🔐 LIGHTWEIGHT NATIVE FIREBASE CONFIG (Direct Injection Matrix)
+// 🔐 LIGHTWEIGHT NATIVE FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBgUlcykzcAEfvfVV7Dqi4lcTbmwC_hIzM",
   authDomain: "azan-universal-controller.firebaseapp.com",
@@ -20,20 +20,21 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 const docRef = doc(db, 'system', 'liveSettings');
 
-// Basic Middlewares
+// Middlewares Setup
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.static('public'));
 
-// 📡 ABSOLUTE CORS HANDSHAKE OVERWRITE
+// 📡 FULL CORS HANDSHAKE HEADERS
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Accept,Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
 });
 
+// 🧠 ULTIMATE SUPREME CONTROL STATE (Fallback)
 const defaultSettings = {
     maintenanceMode: false,
     alertMessage: "",
@@ -48,7 +49,7 @@ const defaultSettings = {
 let liveSessions = {}; 
 let activityLogs = [];
 
-// Fast Fetch Settings Database Handler
+// Helper: Database Read Operation
 async function fetchCurrentSettings() {
     try {
         const docSnap = await getDoc(docRef);
@@ -59,12 +60,12 @@ async function fetchCurrentSettings() {
             return defaultSettings;
         }
     } catch (e) {
-        console.error("Firebase Sync Read Error:", e);
+        console.error("Database read failure:", e);
         return defaultSettings;
     }
 }
 
-// 📡 Dynamic Real-Time Traffic Monitor
+// 📡 Dynamic Real-Time Traffic Monitor Middleware
 app.use((req, res, next) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const cleanIp = ip.split(',')[0].trim().replace('::1', '127.0.0.1');
@@ -81,38 +82,38 @@ app.use((req, res, next) => {
     next();
 });
 
-// Session automatic cleaner (Keeps traffic dashboard realistic)
+// Session Cleaner
 setInterval(() => {
     const now = Date.now();
     for (let ip in liveSessions) {
-        if (now - liveSessions[ip].lastSeen > 25000) delete liveSessions[ip];
+        if (now - liveSessions[ip].lastSeen > 20000) delete liveSessions[ip];
     }
-}, 10000);
+}, 8000);
 
-// Default Serve Node Route
+// Root UI Index file distributor
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ⚡ Endpoint: Telemetry Logger Click Collector
+// ⚡ Telemetry Logs Stream Collector
 app.post('/api/report-activity', (req, res) => {
     const { action, tool, device } = req.body;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const cleanIp = ip.split(',')[0].trim().replace('::1', '127.0.0.1');
 
     activityLogs.unshift({
-        action: action || 'Action Handled',
-        tool: tool || 'Toolkit Module',
-        device: device || '📱 Mobile/PC',
+        action: action || 'Tool Interaction',
+        tool: tool || 'System Node',
+        device: device || 'Client Device',
         ip: cleanIp,
         time: new Date().toLocaleTimeString()
     });
-    if (activityLogs.length > 20) activityLogs.pop();
+    if (activityLogs.length > 30) activityLogs.pop();
 
     res.json({ success: true });
 });
 
-// 📊 Endpoint: Dashboard Interface Synchronizer
+// 📊 Dashboard UI Elements Sync Route
 app.get('/api/admin-stats', async (req, res) => {
     const currentSettings = await fetchCurrentSettings();
     res.json({
@@ -123,52 +124,60 @@ app.get('/api/admin-stats', async (req, res) => {
     });
 });
 
-// ⚙️ Endpoint: Client Fetch Toolkit Data Structure
+// ⚙️ Client Target Web Live Rule Fetch Node
 app.get('/api/get-settings', async (req, res) => {
     const currentSettings = await fetchCurrentSettings();
     res.json(currentSettings);
 });
 
-// 🚀 MASTER ROUTE: Supreme Controller Save Changes Button Handler
+// 🚀 MASTER UPDATER ROUTE (Fixes payload mismatch crash)
 app.post('/api/update-master', async (req, res) => {
     const { token, config } = req.body;
+
     if (token !== 'AzanTools_Secure_786') {
         return res.status(403).json({ success: false, error: 'Access Denied!' });
     }
 
-    if (config) {
-        try {
-            let currentSettings = await fetchCurrentSettings();
-            
-            // Explicit Core Matrix Merge Protection
-            let updatedSettings = {
-                maintenanceMode: config.maintenanceMode !== undefined ? config.maintenanceMode : currentSettings.maintenanceMode,
-                alertMessage: config.alertMessage !== undefined ? config.alertMessage : currentSettings.alertMessage,
-                themeColor: config.themeColor !== undefined ? config.themeColor : currentSettings.themeColor,
-                blockedTools: currentSettings.blockedTools || [],
-                redirectUrl: config.redirectUrl !== undefined ? config.redirectUrl : currentSettings.redirectUrl,
-                broadcastNotification: config.broadcastNotification || currentSettings.broadcastNotification,
-                firewall: config.firewall || currentSettings.firewall,
-                meta: config.meta || currentSettings.meta
-            };
-
-            if (config.blockedTools && typeof config.blockedTools === 'string') {
-                updatedSettings.blockedTools = config.blockedTools.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
-            }
-
-            // Push execution direct into firebase document
-            await setDoc(docRef, updatedSettings, { merge: true });
-            return res.json({ success: true, currentSettings: updatedSettings });
-        } catch (err) {
-            return res.status(500).json({ success: false, error: err.message });
-        }
+    if (!config) {
+        return res.status(400).json({ success: false, error: 'Empty Config Data Matrix' });
     }
-    res.status(400).json({ success: false, error: 'Config payload structural crash' });
+
+    try {
+        let currentSettings = await fetchCurrentSettings();
+        
+        // Direct object construction mapping
+        let payloadToSave = {
+            maintenanceMode: config.maintenanceMode !== undefined ? config.maintenanceMode : currentSettings.maintenanceMode,
+            alertMessage: config.alertMessage !== undefined ? config.alertMessage : currentSettings.alertMessage,
+            themeColor: config.themeColor !== undefined ? config.themeColor : currentSettings.themeColor,
+            blockedTools: currentSettings.blockedTools || [],
+            redirectUrl: config.redirectUrl !== undefined ? config.redirectUrl : currentSettings.redirectUrl,
+            broadcastNotification: config.broadcastNotification !== undefined ? config.broadcastNotification : currentSettings.broadcastNotification,
+            firewall: config.firewall !== undefined ? config.firewall : currentSettings.firewall,
+            meta: config.meta !== undefined ? config.meta : currentSettings.meta
+        };
+
+        // Handling comma-separated string formatting if applicable
+        if (config.blockedTools !== undefined) {
+            if (typeof config.blockedTools === 'string') {
+                payloadToSave.blockedTools = config.blockedTools.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
+            } else if (Array.isArray(config.blockedTools)) {
+                payloadToSave.blockedTools = config.blockedTools;
+            }
+        }
+
+        // Direct Sync onto cloud cluster node document
+        await setDoc(docRef, payloadToSave, { merge: true });
+        
+        return res.json({ success: true, currentSettings: payloadToSave });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`[🚀] Control Node stable on port ${PORT}`));
+    app.listen(PORT, () => console.log(`[🚀] Control Core Operational on port ${PORT}`));
 }
 
 module.exports = app;
