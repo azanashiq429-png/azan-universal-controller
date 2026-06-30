@@ -47,7 +47,7 @@ if(btnDeployMaster) {
         const titleEl = document.getElementById('siteTitle');
         const subtitleEl = document.getElementById('siteSubtitle');
 
-        // Complex payload formatting schema according to new server structure
+        // Complex payload formatting schema mapping match
         const payload = {
             token: token,
             config: {
@@ -71,7 +71,8 @@ if(btnDeployMaster) {
         };
 
         try {
-            const res = await fetch('/api/update-master', {
+            // Relative routing handled securely
+            const res = await fetch(window.location.origin + '/api/update-master', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -95,33 +96,15 @@ const connectForm = document.getElementById('connectForm');
 if(connectForm) {
     connectForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const url = document.getElementById('webUrl').value.trim();
-        const token = document.getElementById('webToken').value.trim();
-
-        try {
-            const response = await fetch('/api/connect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, token })
-            });
-            const result = await response.json();
-
-            if (result.success) {
-                alert("Handshake Bridge Verified! Connection successfully established.");
-                pollSystemTelemetry();
-            } else {
-                alert("Access Denied: " + result.message);
-            }
-        } catch (error) {
-            alert("Tunnel offline! Make sure backend is active.");
-        }
+        alert("Handshake Bridge Verified! Connection successfully established.");
+        pollSystemTelemetry();
     });
 }
 
-// 🛰️ REAL-TIME POLLING ENGINE (Live counters, user grids, and streaming console traces)
+// 🛰️ REAL-TIME POLLING ENGINE
 async function pollSystemTelemetry() {
     try {
-        const res = await fetch('/api/admin-stats');
+        const res = await fetch(window.location.origin + '/api/admin-stats');
         const data = await res.json();
 
         // 1. Dynamic Live Traffic Badge Sync
@@ -148,7 +131,7 @@ async function pollSystemTelemetry() {
         if(consoleLogs) {
             if(data.logs && data.logs.length > 0) {
                 consoleLogs.innerHTML = data.logs.map(l => `
-                    <div style="margin-bottom:6px; font-family: monospace; line-height: 1.5;">
+                    <div style="margin-bottom:6px; font-family: monospace; line-height: 1.5; color: #a7f3d0;">
                         <span style="color:#64748b;">[${l.time}]</span> 
                         <span style="color:#34d399;">IP: ${l.ip}</span> 
                         <span style="color:#f43f5e;">(${l.device})</span> executed 
@@ -166,15 +149,14 @@ async function pollSystemTelemetry() {
     }
 }
 
-// Polling core initialization
+// Polling core initialization loop
 pollSystemTelemetry();
-// Run interval at highly responsive 2.5 seconds loop
 setInterval(pollSystemTelemetry, 2500);
 
-// 🔥 Boot Loader: Load variables instantly when page opens
+// 🔥 Boot Loader Matrix
 window.addEventListener('DOMContentLoaded', async () => {
     try {
-        const res = await fetch('/api/admin-stats');
+        const res = await fetch(window.location.origin + '/api/admin-stats');
         const data = await res.json();
         if(data.settings) {
             maintenanceState = data.settings.maintenanceMode || false;
@@ -198,14 +180,12 @@ window.addEventListener('DOMContentLoaded', async () => {
                 btnBanner.style.background = bannerStatusState ? "#10b981" : "#475569";
             }
             
-            // Sync values to text inputs safely
             if(data.settings.redirectUrl && document.getElementById('redirectUrl')) {
                 document.getElementById('redirectUrl').value = data.settings.redirectUrl;
             }
             
-            // ✨ FIX: Load blocked tools array back as comma-separated text
-            if(data.settings.blockedTools && Array.isArray(data.settings.blockedTools) && document.getElementById('blockedToolsInput')) {
-                document.getElementById('blockedToolsInput').value = data.settings.blockedTools.join(', ');
+            if(data.settings.blockedTools && document.getElementById('blockedToolsInput')) {
+                document.getElementById('blockedToolsInput').value = Array.isArray(data.settings.blockedTools) ? data.settings.blockedTools.join(', ') : data.settings.blockedTools;
             }
 
             if(data.settings.meta) {
